@@ -129,7 +129,17 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getMe = async(req, res) => {
+    const user = await User.findById(req.user._id);
+    return res.json({
+      name: user.name,
+      email: user.email,
+      id: user._id,
+    })
+}
+
 module.exports = {
   registerUser,
   loginUser,
+  getMe
 };
