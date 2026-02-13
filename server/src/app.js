@@ -14,6 +14,7 @@ mongoose
 
 
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/workspaces", require("./routes/workspaceRoute"));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
