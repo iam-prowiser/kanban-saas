@@ -1,4 +1,5 @@
 const workspace = require("../models/workspace");
+const mongoose = require("mongoose");
 
 async function workspaceController(req, res) {
   try {
@@ -28,4 +29,28 @@ async function workspaceController(req, res) {
   }
 }
 
-module.exports = workspaceController;
+async function getUserWorkspaces(req, res) {
+  try {
+    const userid = req.user._id;
+    const userWorkspaces = await workspace.find({
+      members: userid,
+    });
+    //console.log(userWorkspaces);
+    const result = userWorkspaces.map((ws) => ({
+      id: ws._id,
+      name: ws.name,
+      owner: ws.owner,
+    }));
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+}
+
+module.exports = {
+  getUserWorkspaces,
+  workspaceController,
+};

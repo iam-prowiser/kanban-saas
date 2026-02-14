@@ -10,4 +10,5 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/me", authMiddlware, getMe);
 
+
 module.exports = router;

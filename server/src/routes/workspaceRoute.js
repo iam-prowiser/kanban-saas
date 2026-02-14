@@ -1,8 +1,10 @@
 const express = require('express');
-const authMiddlware = require('../middlewares/authmiddleware');
-const workspaceController = require('../controllers/workspaceController');
+const authMiddleware = require('../middlewares/authmiddleware');
+const { workspaceController, getUserWorkspaces } = require('../controllers/workspaceController');
 const router = express.Router();
 
-router.post("/", authMiddlware, workspaceController);
+router.post("/", authMiddleware, workspaceController);
+router.get("/", authMiddleware, getUserWorkspaces);
+
 
 module.exports = router;
