@@ -31,6 +31,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const workspace = require('../models/workspace');
 
 const registerUser = async (req, res) => {
   try {
@@ -130,12 +131,23 @@ const loginUser = async (req, res) => {
 };
 
 const getMe = async(req, res) => {
-    const user = await User.findById(req.user._id);
-    return res.json({
-      name: user.name,
-      email: user.email,
-      id: user._id,
-    })
+    //const user = await User.findById(req.user._id);
+    const workspaceId = req.params.id;
+    const realWorkspaceId = `ObjectId('${workspaceId}')`
+    const idWorkspaceExists = await workspace.find({
+      id: `ObjectId('${workspaceId}')`
+    });
+    if(!idWorkspaceExists){
+      return res.status(404).json({
+        message: "Not Found"
+      })
+    }
+    console.log(idWorkspaceExists);
+    // return res.json({
+    //   name: user.name,
+    //   email: user.email,
+    //   id: user._id,
+    // })
 }
 
 module.exports = {

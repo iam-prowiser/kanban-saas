@@ -50,7 +50,39 @@ async function getUserWorkspaces(req, res) {
   }
 }
 
+async function getWorkspaceById(req, res) {
+  try {
+    const workspaceId = req.params.id;
+    const idWorkspaceExists = await workspace.findById(workspaceId);
+    if (!idWorkspaceExists) {
+      return res.status(404).json({
+        message: "Not Found",
+      });
+    }
+    const isMember = idWorkspaceExists.members.some(
+      (memberId) => memberId.toString() === req.user._id,
+    );
+    if (!isMember) {
+      return res.status(403).json({
+        message: "Forbidden",
+      });
+    }
+    return res.status(200).json({
+      id: idWorkspaceExists._id,
+      name: idWorkspaceExists.name,
+      owner: idWorkspaceExists.owner,
+      members: idWorkspaceExists.members,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+}
+
 module.exports = {
   getUserWorkspaces,
   workspaceController,
+  getWorkspaceById,
 };
