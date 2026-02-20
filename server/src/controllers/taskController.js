@@ -56,4 +56,56 @@ async function createTask(req, res) {
   }
 }
 
-module.exports = createTask;
+async function getTasksByProject(req, res) {
+  try {
+    const projectId = req.params.id;
+    const projectExists = await projects.findById(projectId);
+    if (!projectExists) {
+      return res.status(404).json({
+        message: "Project Not Found",
+      });
+    }
+    //console.log(projectExists);
+    const workspaceId = projectExists.workspace.toString();
+    const workspaceById = await workspace.findById(workspaceId);
+    if (!workspaceById) {
+      return res.status(404).json({
+        message: "Workspace Not Found",
+      });
+    }
+    //console.log(workspaceById);
+    const isMember = workspaceById.members.some(
+      (memberId) => memberId.toString() === req.user._id.toString(),
+    );
+    if (!isMember) {
+      return res.status(403).json({
+        message: "Not Authorized",
+      });
+    }
+    const allTasks = await Task.find({
+      project: projectId,
+    });
+    const result = allTasks.map((tasks) => ({
+      id: tasks._id,
+      title: tasks.title,
+      description: tasks.description,
+      status: tasks.status,
+      project: tasks.project,
+      createdBy: tasks.createdBy,
+    }));
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+}
+
+async function updateTaskStatus(req, res){
+    const taskId = req.params.id;
+    const { status } = req.body;
+    
+}
+
+module.exports = { createTask, getTasksByProject };
