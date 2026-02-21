@@ -102,10 +102,65 @@ async function getTasksByProject(req, res) {
   }
 }
 
-async function updateTaskStatus(req, res){
+async function updateTaskStatus(req, res) {
+  try {
     const taskId = req.params.id;
     const { status } = req.body;
-    
+    if (!status) {
+      return res.status(400).json({
+        message: "Status is Required",
+      });
+    }
+    const allowedEnums = ["todo", "in-progress", "done"];
+    if (!allowedEnums.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid Status",
+      });
+    }
+    const tasksExists = await Task.findById(taskId);
+    if (!tasksExists) {
+      return res.status(404).json({
+        message: "Task Not Found",
+      });
+    }
+    const projectId = tasksExists.project;
+    const projectExists = await projects.findById(projectId);
+    if (!projectExists) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+    const workspaceId = projectExists.workspace;
+    const workspaceExists = await workspace.findById(workspaceId);
+    if (!workspaceExists) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+    const isMember = workspaceExists.members.some(
+      (memberId) => memberId.toString() === req.user._id.toString(),
+    );
+    if (!isMember) {
+      return res.status(403).json({
+        message: "Not Authorized",
+      });
+    }
+    tasksExists.status = status;
+    await tasksExists.save();
+    return res.status(200).json({
+      id: tasksExists._id,
+      title: tasksExists.title,
+      description: tasksExists.description,
+      status: tasksExists.status,
+      project: tasksExists.project,
+      createdBy: tasksExists.createdBy,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
 }
 
-module.exports = { createTask, getTasksByProject };
+module.exports = { createTask, getTasksByProject, updateTaskStatus };
