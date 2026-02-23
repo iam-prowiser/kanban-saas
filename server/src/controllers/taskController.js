@@ -1,3 +1,4 @@
+const { act } = require("react");
 const projects = require("../models/projects");
 const Task = require("../models/Task");
 const workspace = require("../models/workspace");
@@ -163,4 +164,66 @@ async function updateTaskStatus(req, res) {
   }
 }
 
-module.exports = { createTask, getTasksByProject, updateTaskStatus };
+async function updateTaskDetails(req, res) {
+  try {
+    const taskId = req.params.id;
+    const { title, description } = req.body;
+    if (title === undefined && description === undefined) {
+      return res.status(400).json({
+        message: "No fields provided for update",
+      });
+    }
+    if (title !== undefined && title.trim() === "") {
+      return res.status(400).json({
+        message: "Invalid title",
+      });
+    }
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({
+        message: "Task Not Found",
+      });
+    }
+    const projectExists = await projects.findById(task.project);
+    if (!projectExists) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+    const workspaceExists = await workspace.findById(projectExists.workspace);
+    if (!workspaceExists) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+    const isMember = workspaceExists.members.some(
+      (memberId) => memberId.toString() === req.user._id.toString(),
+    );
+    if (!isMember) {
+      return res.status(403).json({
+        message: "Not Authorized",
+      });
+    }
+    if (title !== undefined) {
+      task.title = title;
+    }
+    if (description !== undefined) {
+      task.description = description;
+    }
+    await task.save();
+    return res.status(200).json({
+      id: task._id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      project: task.project,
+      createdBy: task.createdBy,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+}
+module.exports = { createTask, getTasksByProject, updateTaskStatus, updateTaskDetails };
